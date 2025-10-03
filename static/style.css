@@ -1,0 +1,81 @@
+/* --- Google Font Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+
+/* --- CSS Variables --- */
+:root {
+    --bg-dark-stone: #211d2b; --bg-parchment: #3a3546; --bg-parchment-light: #4d465e; --text-color: #e2e0e7; --accent-gold: #e6c35c; --accent-gold-glow: rgba(230, 195, 92, 0.4); --hp-color: #c0392b; --mana-color: #2980b9; --btn-primary: #5d4a8e; --btn-primary-hover: #715aad; --btn-danger: #c0392b; --btn-danger-hover: #a53125; --font-heading: 'Cinzel', serif; --font-body: 'Lora', serif;
+}
+
+/* --- General & Body --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body { font-family: var(--font-body); background-color: var(--bg-dark-stone); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="28" height="49" viewBox="0 0 28 49"%3E%3Cg fill-rule="evenodd"%3E%3Cg id="hexagons" fill="%239C92AC" fill-opacity="0.05"%3E%3Cpath d="M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.99-7.5L26 15v19l-13 7.5L0 34V15z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Game Container --- */
+#game-container { width: 100%; height: 100%; max-width: 1400px; max-height: 90vh; background-color: var(--bg-parchment); border: 2px solid var(--accent-gold); border-radius: 8px; box-shadow: 0 0 25px var(--accent-gold-glow), 0 0 10px #000 inset; overflow: hidden; animation: fadeIn 1s ease-out; display: flex; }
+
+/* --- Start Screen & Main Menu --- */
+#start-screen { padding: 2rem; text-align: center; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+/* ... (rest of start screen styles are unchanged) ... */
+#start-screen h1 { font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3rem); color: var(--accent-gold); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 2rem; }
+#main-menu, #scenario-chooser { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; width: 100%; }
+.menu-btn { background: var(--btn-primary); color: var(--text-color); padding: 0.75rem 1.5rem; border: 1px solid var(--accent-gold); border-radius: 4px; cursor: pointer; font-family: var(--font-heading); font-size: 1.1rem; text-transform: uppercase; }
+
+/* --- Main Game UI --- */
+#main-game-ui { display: flex; width: 100%; height: 100%; }
+.hidden { display: none !important; }
+#left-panel { flex: 3; padding: 1.5rem; display: flex; flex-direction: column; overflow: hidden; }
+#right-panel { flex: 1; min-width: 300px; background-color: rgba(0,0,0,0.1); padding: 1.5rem; border-left: 2px solid var(--accent-gold); overflow-y: auto; display: flex; flex-direction: column; }
+
+/* --- Story Log, Input, Choices --- */
+#story-log { flex-grow: 1; overflow-y: auto; background-color: rgba(0,0,0,0.15); border: 1px solid var(--accent-gold); box-shadow: 0 0 10px rgba(0,0,0,0.5) inset; padding: 1.25rem; margin-bottom: 1.25rem; border-radius: 4px; }
+.story-turn { animation: fadeIn 0.5s ease-out; border-bottom: 1px dashed rgba(230, 195, 92, 0.2); padding-bottom: 1rem; margin-bottom: 1rem; line-height: 1.7; font-size: 1.1rem; }
+#input-area { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+#action-input { flex-grow: 1; padding: 0.75rem; background-color: var(--bg-parchment-light); border: 1px solid var(--accent-gold); color: var(--text-color); border-radius: 4px; font-family: var(--font-body); font-size: 1rem; }
+#input-area button { padding: 0.75rem 1.25rem; border: 1px solid var(--accent-gold); cursor: pointer; border-radius: 4px; font-family: var(--font-heading); font-weight: 700; text-transform: uppercase; }
+#submit-action { background-color: var(--accent-gold); color: var(--bg-dark-stone); }
+#suggestion-btn { background-color: var(--btn-primary); color: var(--text-color); }
+#choices-area { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+.choice-btn { flex-grow: 1; padding: 0.75rem; background: transparent; border: 1px solid var(--accent-gold); color: var(--accent-gold); cursor: pointer; border-radius: 4px; font-family: var(--font-body); font-style: italic; }
+
+/* --- Right Panel --- */
+#right-panel h2, #right-panel h3 { font-family: var(--font-heading); color: var(--accent-gold); border-bottom: 2px solid var(--accent-gold); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+#player-name { font-family: var(--font-heading); font-size: 2em; text-align: center; }
+.stat-bar { margin-bottom: 1.25rem; }
+.bar-container { width: 100%; background-color: rgba(0,0,0,0.3); border-radius: 20px; height: 20px; overflow: hidden; }
+.bar { height: 100%; transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1); border-radius: 20px; }
+#hp-bar { background-color: var(--hp-color); box-shadow: 0 0 10px var(--hp-color); }
+#mana-bar { background-color: var(--mana-color); box-shadow: 0 0 10px var(--mana-color); }
+#hp-text, #mana-text { text-align: center; display: block; margin-top: -20px; color: white; font-weight: bold; text-shadow: 1px 1px 3px black; }
+#currency-display { display: flex; justify-content: space-around; background-color: var(--bg-parchment-light); padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid var(--accent-gold); }
+
+/* --- NEW: Icon Navigation --- */
+#details-navigation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: auto; padding-top: 1rem; }
+.details-nav-btn { background: var(--bg-parchment-light); border: 1px solid var(--accent-gold); color: var(--text-color); border-radius: 4px; padding: 0.75rem; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; font-family: var(--font-body); }
+.details-nav-btn:hover { background-color: var(--btn-primary); }
+.details-nav-btn svg { width: 28px; height: 28px; }
+
+/* --- NEW & UPDATED: Modal Styling --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+.modal-card { background-color: var(--bg-parchment); border: 2px solid var(--accent-gold); border-radius: 8px; box-shadow: 0 0 25px var(--accent-gold-glow); padding: 2rem; text-align: center; animation: fadeIn 0.5s; width: 90%; max-width: 500px; position: relative; }
+.modal-close-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2.5rem; color: var(--text-color); cursor: pointer; line-height: 1; }
+.modal-card h2 { font-family: var(--font-heading); color: var(--accent-gold); font-size: 2.5em; margin-bottom: 1rem; }
+#level-up-choices { display: flex; flex-direction: column; gap: 1rem; }
+.level-up-btn { background: var(--btn-primary); color: var(--text-color); padding: 0.75rem 1.5rem; border: 1px solid var(--accent-gold); border-radius: 4px; cursor: pointer; font-family: var(--font-heading); font-size: 1.2em; text-transform: uppercase; }
+#details-modal-content { max-height: 60vh; overflow-y: auto; text-align: left; }
+.details-list { list-style-type: none; padding: 0; }
+.details-list li { background-color: var(--bg-parchment-light); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 4px solid var(--accent-gold); }
+.details-list li .stat-name { font-weight: bold; color: var(--accent-gold); }
+
+/* --- Mobile Compatibility --- */
+@media (max-width: 800px) {
+    body { padding: 0; }
+    #game-container { flex-direction: column; border-radius: 0; border: none; max-height: none; height: 100vh; }
+    #main-game-ui { flex-direction: column; height: 100%; overflow: hidden; }
+    #left-panel { flex: 1; min-height: 0; }
+    #right-panel { flex: 0 0 auto; border-left: none; border-top: 2px solid var(--accent-gold); overflow-y: hidden; } /* Prevent internal scrolling */
+    #story-log { height: 100%; }
+}
+

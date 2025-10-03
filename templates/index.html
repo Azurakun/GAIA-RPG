@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini RPG Adventure</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Start screen / Main Menu (unchanged) -->
+        <div id="start-screen">
+            <h1>Gemini RPG Adventure</h1>
+            <div id="main-menu">
+                <div id="save-slots-container"><h2>Saved Games</h2><ul id="save-slots-list"></ul></div>
+                <button id="new-game-btn" class="menu-btn">New Game</button>
+            </div>
+            <div id="scenario-chooser" class="hidden">
+                <h3>Choose Your Starting Scenario</h3>
+                <div id="scenario-options">
+                    <button class="scenario-btn" data-scenario-id="tavern">Tavern Mystery</button>
+                    <button class="scenario-btn" data-scenario-id="forest">Enchanted Forest</button>
+                    <button class="scenario-btn" data-scenario-id="prison">Prison Break</button>
+                    <button class="scenario-btn" data-scenario-id="custom">Custom...</button>
+                </div>
+                <div id="custom-scenario-area" class="hidden">
+                    <textarea id="custom-scenario-input" placeholder="Describe your starting situation..."></textarea>
+                    <button id="start-custom-game-btn" class="menu-btn">Begin Custom Adventure</button>
+                </div>
+                 <input type="text" id="player-name-input" placeholder="Enter your character's name">
+                <button id="back-to-menu-btn" class="menu-btn secondary">Back to Main Menu</button>
+            </div>
+        </div>
+
+        <!-- Main Game UI (UPDATED) -->
+        <div id="main-game-ui" class="hidden">
+            <div id="left-panel">
+                <div id="story-log"></div>
+                <div id="input-area">
+                    <input type="text" id="action-input" placeholder="What do you do?">
+                    <button id="submit-action">Send</button>
+                    <button id="suggestion-btn">Get Suggestion</button>
+                </div>
+                <div id="choices-area"></div>
+                <div id="game-controls">
+                    <button id="save-game-btn">Save Game</button>
+                    <button id="return-to-menu-btn">Main Menu</button>
+                </div>
+            </div>
+
+            <div id="right-panel">
+                <h2>Character</h2>
+                <div id="player-name"></div>
+                <!-- Vitals -->
+                <div class="stat-bar">
+                    <span>HP</span>
+                    <div class="bar-container"><div id="hp-bar" class="bar"></div></div>
+                    <span id="hp-text"></span>
+                </div>
+                <div class="stat-bar">
+                    <span>Mana</span>
+                    <div class="bar-container"><div id="mana-bar" class="bar"></div></div>
+                    <span id="mana-text"></span>
+                </div>
+                <!-- Wealth -->
+                <h3>Wealth</h3>
+                <div id="currency-display">
+                    <div class="currency-item"><span class="currency-icon">💰</span><span id="gold-amount">0</span></div>
+                    <div class="currency-item"><span class="currency-icon">⚪</span><span id="silver-amount">0</span></div>
+                    <div class="currency-item"><span class="currency-icon">🟤</span><span id="copper-amount">0</span></div>
+                </div>
+
+                <!-- NEW: Icon-based Navigation -->
+                <h3>Details</h3>
+                <div id="details-navigation">
+                    <button class="details-nav-btn" data-panel="character">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>Character</span>
+                    </button>
+                    <button class="details-nav-btn" data-panel="inventory">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <span>Inventory</span>
+                    </button>
+                    <button class="details-nav-btn" data-panel="skills">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span>Skills</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Level Up Modal (unchanged) -->
+    <div id="level-up-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2>Level Up!</h2>
+            <p>Your power grows. Choose a stat to increase:</p>
+            <div id="level-up-choices"></div>
+        </div>
+    </div>
+
+    <!-- NEW: Generic Details Modal -->
+    <div id="details-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button id="details-modal-close-btn" class="modal-close-btn">&times;</button>
+            <h2 id="details-modal-title"></h2>
+            <div id="details-modal-content"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+
