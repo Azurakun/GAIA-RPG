@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Start screen / Main Menu (unchanged) -->
+        <!-- Start screen / Main Menu -->
         <div id="start-screen">
             <h1>Gemini RPG Adventure</h1>
             <div id="main-menu">
@@ -17,6 +17,7 @@
             </div>
             <div id="scenario-chooser" class="hidden">
                 <h3>Choose Your Starting Scenario</h3>
+                <input type="text" id="player-name-input" placeholder="Enter your character's name">
                 <div id="scenario-options">
                     <button class="scenario-btn" data-scenario-id="tavern">Tavern Mystery</button>
                     <button class="scenario-btn" data-scenario-id="forest">Enchanted Forest</button>
@@ -27,62 +28,59 @@
                     <textarea id="custom-scenario-input" placeholder="Describe your starting situation..."></textarea>
                     <button id="start-custom-game-btn" class="menu-btn">Begin Custom Adventure</button>
                 </div>
-                 <input type="text" id="player-name-input" placeholder="Enter your character's name">
                 <button id="back-to-menu-btn" class="menu-btn secondary">Back to Main Menu</button>
             </div>
         </div>
 
-        <!-- Main Game UI (UPDATED) -->
+        <!-- Main Game UI -->
         <div id="main-game-ui" class="hidden">
             <div id="left-panel">
                 <div id="story-log"></div>
-                <div id="input-area">
-                    <input type="text" id="action-input" placeholder="What do you do?">
-                    <button id="submit-action">Send</button>
-                    <button id="suggestion-btn">Get Suggestion</button>
-                </div>
-                <div id="choices-area"></div>
-                <div id="game-controls">
-                    <button id="save-game-btn">Save Game</button>
-                    <button id="return-to-menu-btn">Main Menu</button>
+                <div id="interaction-container">
+                    <div id="input-area">
+                        <input type="text" id="action-input" placeholder="What do you do?">
+                        <button id="submit-action">Send</button>
+                        <button id="suggestion-btn">Suggestion</button>
+                    </div>
+                    <div id="choices-area"></div>
+                    <div id="game-controls">
+                        <button id="save-game-btn">Save Game</button>
+                        <button id="return-to-menu-btn">Main Menu</button>
+                    </div>
                 </div>
             </div>
 
             <div id="right-panel">
-                <h2>Character</h2>
-                <div id="player-name"></div>
-                <!-- Vitals -->
-                <div class="stat-bar">
-                    <span>HP</span>
-                    <div class="bar-container"><div id="hp-bar" class="bar"></div></div>
-                    <span id="hp-text"></span>
+                <div class="right-panel-content">
+                    <h2 id="player-name">Character</h2>
+                    <div class="stat-bar">
+                        <span class="stat-bar-label">HP</span>
+                        <div class="bar-container"><div id="hp-bar" class="bar"></div></div>
+                        <span id="hp-text" class="stat-bar-text"></span>
+                    </div>
+                    <div class="stat-bar">
+                        <span class="stat-bar-label">Mana</span>
+                        <div class="bar-container"><div id="mana-bar" class="bar"></div></div>
+                        <span id="mana-text" class="stat-bar-text"></span>
+                    </div>
+                    <h3>Wealth</h3>
+                    <div id="currency-display">
+                        <div class="currency-item"><span class="currency-icon">💰</span><span id="gold-amount">0</span> Gold</div>
+                        <div class="currency-item"><span class="currency-icon">⚪</span><span id="silver-amount">0</span> Silver</div>
+                        <div class="currency-item"><span class="currency-icon">🟤</span><span id="copper-amount">0</span> Copper</div>
+                    </div>
                 </div>
-                <div class="stat-bar">
-                    <span>Mana</span>
-                    <div class="bar-container"><div id="mana-bar" class="bar"></div></div>
-                    <span id="mana-text"></span>
-                </div>
-                <!-- Wealth -->
-                <h3>Wealth</h3>
-                <div id="currency-display">
-                    <div class="currency-item"><span class="currency-icon">💰</span><span id="gold-amount">0</span></div>
-                    <div class="currency-item"><span class="currency-icon">⚪</span><span id="silver-amount">0</span></div>
-                    <div class="currency-item"><span class="currency-icon">🟤</span><span id="copper-amount">0</span></div>
-                </div>
-
-                <!-- NEW: Icon-based Navigation -->
-                <h3>Details</h3>
                 <div id="details-navigation">
                     <button class="details-nav-btn" data-panel="character">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                         <span>Character</span>
                     </button>
                     <button class="details-nav-btn" data-panel="inventory">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M20 6h-4c0-2.21-1.79-4-4-4S8 3.79 8 6H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-8-2c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm8 16H4V8h16v12z"/></svg>
                         <span>Inventory</span>
                     </button>
                     <button class="details-nav-btn" data-panel="skills">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z"/></svg>
                         <span>Skills</span>
                     </button>
                 </div>
@@ -90,16 +88,15 @@
         </div>
     </div>
     
-    <!-- Level Up Modal (unchanged) -->
+    <!-- Modals -->
     <div id="level-up-modal" class="modal-overlay hidden">
-        <div class="modal-card">
+        <div id="level-up-card" class="modal-card">
             <h2>Level Up!</h2>
             <p>Your power grows. Choose a stat to increase:</p>
             <div id="level-up-choices"></div>
         </div>
     </div>
 
-    <!-- NEW: Generic Details Modal -->
     <div id="details-modal" class="modal-overlay hidden">
         <div class="modal-card">
             <button id="details-modal-close-btn" class="modal-close-btn">&times;</button>
@@ -107,8 +104,16 @@
             <div id="details-modal-content"></div>
         </div>
     </div>
+    
+    <!-- NEW Suggestion Modal -->
+    <div id="suggestion-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button id="suggestion-modal-close-btn" class="modal-close-btn">&times;</button>
+            <h2>Suggestion</h2>
+            <div id="suggestion-modal-content"></div>
+        </div>
+    </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
-

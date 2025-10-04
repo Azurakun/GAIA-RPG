@@ -14,7 +14,7 @@ load_dotenv()
 
 # --- Configure Gemini API ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-pro')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # --- Configure Flask App ---
 app = Flask(__name__)
@@ -51,9 +51,11 @@ class GameState:
 def get_base_prompt_template():
     return """
     You are a Dungeon Master for a text-based RPG. Your entire response MUST be a single, valid JSON object.
+    - Write the story as immersive as possible just like a novel story but without the chapter or a follow up prompt. Do not overdid the story, I will decide what's next. And make sure you use dialogue as well
     - Award experience points (XP) for overcoming challenges. A small challenge might be 10-20 XP, a major one 50-100 XP.
     - Player stats are: strength, agility, intelligence, dexterity.
     - JSON keys: "story_text", "choices", "player_updates" (can include "xp": value), "game_updates", "memory_additions".
+    - Choices should be an array of strings. For example: ["Go left", "Investigate the sound", "Check my inventory"]
     """
 
 def generate_ai_response(current_game_state_dict, player_action):
@@ -181,7 +183,7 @@ def get_suggestion():
     game_state_dict = request.json.get('game_state')
     if not game_state_dict: return jsonify({"error": "Game not started"}), 400
     prompt = f"Game state: {json.dumps(game_state_dict)}"; suggestion = "Perhaps looking closer at your surroundings could reveal a hidden detail."
-    try: response = model.generate_content(["You are a helpful game assistant. The player is stuck. Provide a creative hint.", prompt]); suggestion = response.text
+    try: response = model.generate_content(["You are a helpful game assistant. The player is stuck. Provide a creative, contextual hint about what they could do next, based on their situation.", prompt]); suggestion = response.text
     except Exception as e: print(f"Error getting suggestion: {e}")
     return jsonify({"suggestion": suggestion})
 
