@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Health Potion",
+    "description": "A vial of shimmering red liquid that smells of cherries and mint.",
+    "type": "Consumable",
+    "keywords": ["health potion", "red vial", "healing potion"],
+    "effects": {
+      "Restores": "25 HP"
+    },
+    "lore": "Brewed by the hedge-witches of the Glimmerwood, these potions are a common sight in any adventurer's pack."
+  },
+  {
+    "name": "Mana Potion",
+    "description": "A swirling, deep blue potion that feels cool to the touch.",
+    "type": "Consumable",
+    "keywords": ["mana potion", "blue potion", "magic potion"],
+    "effects": {
+      "Restores": "20 Mana"
+    },
+    "lore": "Distilled from the essence of captured starlight, it is said to taste like a cool night's sky."
+  },
+  {
+    "name": "Goblin Ear",
+    "description": "A grotesque, leathery trophy taken from a defeated goblin. It smells awful.",
+    "type": "Junk",
+    "keywords": ["goblin ear", "ear of a goblin"],
+    "effects": {
+      "Value": "2 Copper"
+    },
+    "lore": "Some merchants collect these for... reasons best left unspoken."
+  },
+  {
+    "name": "Iron Sword",
+    "description": "A basic, but reliable, iron longsword. The hilt is wrapped in worn leather.",
+    "type": "Weapon",
+    "keywords": ["iron sword", "sword"],
+    "effects": {
+      "Damage": "8-12 Physical"
+    },
+    "lore": "The standard-issue weapon for the Royal Guard of Eldoria before the kingdom fell."
+  },
+  {
+    "name": "Leather Armor",
+    "description": "Simple, sturdy armor made from boiled and hardened leather plates.",
+    "type": "Armor",
+    "keywords": ["leather armor", "armor"],
+    "effects": {
+      "Defense": "+5 Physical"
+    },
+    "lore": "Crafted by the dozen in the tanneries of the Free Cities. It offers basic protection against claws and blades."
+  },
+  {
+    "name": "Gold Coin",
+    "description": "A shiny gold coin, stamped with the visage of a forgotten king.",
+    "type": "Currency",
+    "keywords": ["gold coin", "gold piece"],
+    "effects": {
+      "Value": "1 Gold"
+    },
+    "lore": "A rare sight these days, harkening back to a more prosperous era."
+  },
+  {
+      "name": "Silver Coin",
+      "description": "A well-worn silver coin.",
+      "type": "Currency",
+      "keywords": ["silver coin", "silver piece"],
+      "effects": {
+        "Value": "1 Silver"
+    },
+    "lore": "The most common currency for trade between towns."
+  },
+  {
+      "name": "Copper Coin",
+      "description": "A common, dirty copper coin.",
+      "type": "Currency",
+      "keywords": ["copper coin", "copper piece"],
+      "effects": {
+        "Value": "1 Copper"
+    },
+    "lore": "Barely enough to buy a loaf of stale bread."
+  },
+  {
+    "name": "Mysterious Key",
+    "description": "A strange, ornate key that seems to hum with a faint, magical energy. It doesn't seem to fit any normal lock.",
+    "type": "Key Item",
+    "keywords": ["key", "strange key", "mysterious key"],
+    "effects": {
+      "Special": "Unlocks something unknown."
+    },
+    "lore": "Its origins are a mystery, but you feel a sense of destiny connected to it."
+  },
+  {
+      "name": "Old Map",
+      "description": "A faded piece of parchment with cryptic markings and a large 'X' drawn in what looks like dried blood.",
+      "type": "Key Item",
+      "keywords": ["map", "old map", "treasure map"],
+      "effects": {
+        "Special": "Leads to a hidden location."
+    },
+    "lore": "The legendary map of the pirate One-Eyed Jack. Many have sought his treasure, but none have returned."
+  }
+]

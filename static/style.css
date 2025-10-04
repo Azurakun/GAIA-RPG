@@ -37,14 +37,14 @@ body {
 
 /* --- Game Container --- */
 #game-container {
-    width: 95vw; /* CHANGED */
-    height: 95vh; /* CHANGED */
-    max-width: 1600px; /* CHANGED */
-    max-height: 900px; /* CHANGED */
+    width: 95vw;
+    height: 95vh;
+    max-width: 1600px;
+    max-height: 900px;
     background: var(--bg-parchment) url('https://www.transparenttextures.com/patterns/dark-leather.png');
     border: 4px ridge var(--accent-gold);
     border-radius: 8px;
-    box-shadow: 0 0 45px var(--accent-gold-glow), 0 0 15px #000 inset; /* CHANGED */
+    box-shadow: 0 0 45px var(--accent-gold-glow), 0 0 15px #000 inset;
     overflow: hidden;
     animation: fadeIn 1s ease-out;
     display: flex;
@@ -125,7 +125,67 @@ body {
 .modal-close-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2.5rem; color: var(--text-color); cursor: pointer; line-height: 1; transition: transform 0.2s; }
 .modal-close-btn:hover { transform: scale(1.2); color: var(--accent-gold); }
 .modal-card h2 { font-family: var(--font-heading); color: var(--accent-gold); font-size: 2.5em; margin-bottom: 1rem; }
-#details-modal-content, #suggestion-modal-content { max-height: 60vh; overflow-y: auto; text-align: left; padding-right: 10px; line-height: 1.7; }
+#details-modal-content, #suggestion-modal-content { max-height: 60vh; overflow-y: auto; text-align: left; padding-right: 10px; line-height: 1.7; scrollbar-width: thin; scrollbar-color: var(--accent-gold) var(--bg-dark-stone); }
+
+/* --- NEW Inventory Styles --- */
+.inventory-item {
+    background-color: var(--bg-parchment-light);
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+.item-header {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+.item-header:hover {
+    background-color: #4a4553;
+}
+.item-header h4 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0;
+}
+.item-header .item-type {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #b0adc1;
+}
+.item-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+    padding: 0 1rem;
+    border-top: 1px solid transparent;
+}
+.item-details.open {
+    max-height: 500px; /* Adjust as needed */
+    padding: 1rem 1rem;
+    border-top: 1px solid rgba(230, 195, 92, 0.2);
+}
+.item-details p {
+    margin: 0 0 0.75rem 0;
+}
+.item-details strong {
+    color: var(--accent-gold);
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    margin-right: 0.5rem;
+}
+.item-lore {
+    font-style: italic;
+    color: #b0adc1;
+    border-left: 3px solid var(--accent-gold);
+    padding-left: 0.75rem;
+    font-size: 0.95rem;
+}
 
 /* --- Mobile --- */
 @media (max-width: 800px) {

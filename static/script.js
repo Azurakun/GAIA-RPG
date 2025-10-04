@@ -165,21 +165,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateFromAIResponse(response) {
         const { story_text, choices, player_updates = {}, game_updates = {}, memory_additions } = response;
-        
+
         if (story_text) {
             const storyTurn = document.createElement('div');
             storyTurn.className = 'story-turn';
             storyTurn.innerHTML = `<p>${story_text}</p>`;
             storyLog.appendChild(storyTurn);
         }
-        
+
         // Apply updates to the local game state
-        if(player_updates.hp !== undefined) currentGameState.player.hp = player_updates.hp;
-        if(player_updates.mana !== undefined) currentGameState.player.mana = player_updates.mana;
-        if(player_updates.xp) currentGameState.player.xp += player_updates.xp;
-        if (player_updates.currency) currentGameState.player.currency = player_updates.currency;
-        if (player_updates.inventory) currentGameState.player.inventory = player_updates.inventory;
-        if(game_updates.current_location) currentGameState.current_location = game_updates.current_location;
+        Object.assign(currentGameState.player, player_updates);
+        
+        // Special handling for inventory to add items, not overwrite
+        if (player_updates.inventory) {
+            for (const [item, count] of Object.entries(player_updates.inventory)) {
+                if (currentGameState.player.inventory[item]) {
+                    currentGameState.player.inventory[item] += count;
+                } else {
+                    currentGameState.player.inventory[item] = count;
+                }
+            }
+        }
+        
+        Object.assign(currentGameState, game_updates);
+
         if (memory_additions) currentGameState.story_memory.push(memory_additions);
 
         if (response.level_up_pending) {
@@ -191,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateChoices(choices);
         scrollToBottom();
     }
+
 
     // --- UI Update Functions ---
     function updateFullUI(gameState) {
@@ -206,23 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
     
-    // --- THIS FUNCTION IS FIXED ---
     function updateChoices(choices = []) {
         choicesArea.innerHTML = '';
         choices.forEach(choice => {
             const choiceBtn = document.createElement('button');
             choiceBtn.className = 'choice-btn';
             
-            // Handle both string and object choices from the AI
-            let choiceText;
-            if (typeof choice === 'string') {
-                choiceText = choice;
-            } else if (typeof choice === 'object' && choice !== null) {
-                // Find the first string value in the object
-                choiceText = Object.values(choice).find(val => typeof val === 'string') || '[Invalid Choice]';
-            } else {
-                choiceText = '[Invalid Choice]';
-            }
+            let choiceText = typeof choice === 'string' ? choice : Object.values(choice).find(val => typeof val === 'string') || '[Invalid Choice]';
             
             choiceBtn.textContent = choiceText;
             choiceBtn.addEventListener('click', () => processAction(choiceText));
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayLoadingIndicator(message = "The story continues...") {
-        removeLoadingIndicator(); // Ensure no duplicates
+        removeLoadingIndicator();
         const loadingElement = document.createElement('div');
         loadingElement.id = 'loading-indicator';
         loadingElement.className = 'story-turn';
@@ -286,15 +286,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     suggestionModalCloseBtn.addEventListener('click', () => closeModal(suggestionModal));
 
-    // --- THIS FUNCTION IS NOW IMPLEMENTED ---
-    function openDetailsModal(panelType) {
+    async function openDetailsModal(panelType) {
         const player = currentGameState.player;
         let title = '';
-        let contentHTML = '<ul class="details-list">';
+        let contentHTML = '';
 
         if (panelType === 'character') {
             title = 'Character Details';
-            contentHTML += `
+            contentHTML = `<ul class="details-list">
                 <li><span class="stat-name">Level:</span> ${player.level || 1}</li>
                 <li><span class="stat-name">XP:</span> ${player.xp || 0} / ${player.xp_to_next_level || 100}</li>
                 <hr>
@@ -304,34 +303,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 <hr>
                 <li><span class="stat-name">Weapon:</span> ${player.equipped?.weapon || 'None'}</li>
                 <li><span class="stat-name">Armor:</span> ${player.equipped?.armor || 'None'}</li>
-                `;
+            </ul>`;
         } else if (panelType === 'inventory') {
             title = 'Inventory';
-            if (Object.keys(player.inventory || {}).length === 0) {
-                contentHTML += '<li>Your inventory is empty.</li>';
+            detailsModalContent.innerHTML = '<p>Loading inventory...</p>';
+            openModal(detailsModal);
+
+            const response = await fetch('/get_inventory_details', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inventory: player.inventory || {} })
+            });
+            const inventoryDetails = await response.json();
+
+            if (inventoryDetails.length === 0) {
+                contentHTML = '<p>Your inventory is empty.</p>';
             } else {
-                for (const [item, count] of Object.entries(player.inventory || {})) {
-                    contentHTML += `<li>${item} (x${count})</li>`;
-                }
+                contentHTML = inventoryDetails.map(item => `
+                    <div class="inventory-item">
+                        <div class="item-header">
+                            <h4>${item.name} (x${item.count})</h4>
+                            <span class="item-type">${item.type}</span>
+                        </div>
+                        <div class="item-details">
+                            <p>${item.description}</p>
+                            <div>${Object.entries(item.effects).map(([key, value]) => `<strong>${key}:</strong> ${value}`).join('<br>')}</div>
+                            <p class="item-lore">${item.lore}</p>
+                        </div>
+                    </div>
+                `).join('');
             }
         } else if (panelType === 'skills') {
             title = 'Skills';
             if (Object.keys(player.skills || {}).length === 0) {
-                contentHTML += '<li>You have not learned any skills.</li>';
+                contentHTML = '<li>You have not learned any skills.</li>';
             } else {
-                for (const [skill, details] of Object.entries(player.skills || {})) {
-                    contentHTML += `<li><strong>${skill}</strong><br><small>Cost: ${details.cost} Mana, Damage: ${details.damage}</small></li>`;
-                }
+                 contentHTML = '<ul>' + Object.entries(player.skills || {}).map(([skill, details]) => 
+                    `<li><strong>${skill}</strong><br><small>Cost: ${details.cost} Mana, Damage: ${details.damage}</small></li>`
+                ).join('') + '</ul>';
             }
         }
 
-        contentHTML += '</ul>';
         detailsModalTitle.textContent = title;
         detailsModalContent.innerHTML = contentHTML;
-        openModal(detailsModal);
+
+        if (panelType === 'inventory') {
+            document.querySelectorAll('.item-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const details = header.nextElementSibling;
+                    details.classList.toggle('open');
+                });
+            });
+        }
+        
+        if (panelType !== 'inventory') {
+           openModal(detailsModal);
+        }
     }
 
-    // --- THIS FUNCTION IS NOW IMPLEMENTED ---
     function showLevelUpModal() {
         levelUpChoices.innerHTML = '';
         const stats = currentGameState.player.stats;
@@ -394,4 +423,3 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMainMenu();
     showScreen('start');
 });
-

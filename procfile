@@ -1,0 +1,35 @@
+web: gunicorn app:app
+
+
+### **2. `requirements.txt` (Updated)**
+
+I've added `gunicorn`, a robust web server that is much better suited for handling live traffic than Flask's built-in development server.
+
+
+http://googleusercontent.com/immersive_entry_chip/0
+
+### **3. `app.py` (Rewritten for Deployment)**
+
+This is the most significant change. I have integrated the database population logic directly into this file. Now, when your application starts on Railway, it will automatically check and populate the items collection from `items.json`, making the separate `db_items.py` file obsolete. The code has also been adjusted to run in a production environment.
+
+
+http://googleusercontent.com/immersive_entry_chip/1
+
+### Deployment Steps on Railway
+
+With these files, your project is ready. Here’s how you can deploy it:
+
+1.  **Delete `db_items.py`**: This file is no longer needed as its function is now part of `app.py`. Deleting it will keep your project clean.
+
+2.  **Set Up Your Railway Project**:
+    * Push your code to a GitHub repository.
+    * On Railway, create a new project and link it to your GitHub repository.
+
+3.  **Configure Environment Variables**:
+    * Do **not** upload your `.env` file. Instead, go to your project's "Variables" tab in the Railway dashboard.
+    * Add two new variables:
+        * `GEMINI_API_KEY`: Copy the value from your local `.env` file.
+        * `MONGO_URI`: Copy your MongoDB connection string from your local `.env` file.
+        
+
+4.  **Deploy**: Railway will automatically detect the `Procfile` and use `gunicorn` to start your application. It will install the dependencies from `requirements.txt` and run your `app.py` script. The game should now be live and accessible at the URL provided by Railway.

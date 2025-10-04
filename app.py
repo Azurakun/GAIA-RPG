@@ -2,33 +2,79 @@ import os
 import json
 import uuid
 import math
+import re
 from datetime import datetime
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 from bson.objectid import ObjectId
 
 # --- Load Environment Variables ---
 load_dotenv()
 
-# --- Configure Gemini API ---
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-flash')
-
 # --- Configure Flask App ---
 app = Flask(__name__)
+
+# --- Configure Gemini API ---
+try:
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except Exception as e:
+    print(f"Error configuring Gemini API: {e}")
+    model = None
 
 # --- Configure MongoDB Connection ---
 MONGO_URI = os.getenv("MONGO_URI")
 if not MONGO_URI:
     raise RuntimeError("MONGO_URI not set in environment variables!")
-    
-client = MongoClient(MONGO_URI)
-db = client.gemini_rpg_db # You can name your database anything
-game_saves_collection = db.game_saves # Your collection to store game states
 
-# --- Core Game Classes (Unchanged) ---
+try:
+    client = MongoClient(MONGO_URI)
+    db = client.gemini_rpg_db
+    game_saves_collection = db.game_saves
+    items_collection = db.items
+    # Test the connection
+    client.admin.command('ping')
+    print("MongoDB connection successful.")
+except errors.ConnectionFailure as e:
+    raise RuntimeError(f"MongoDB connection failed: {e}")
+
+
+# --- Database Population Logic (runs on startup) ---
+def populate_items_from_json(json_file_path='items.json'):
+    """
+    Populates the MongoDB items collection from a JSON file on startup.
+    Only populates if the collection is empty.
+    """
+    if items_collection.count_documents({}) == 0:
+        print("Items collection is empty. Populating from items.json...")
+        try:
+            with open(json_file_path, 'r', encoding='utf-8') as f:
+                items_data = json.load(f)
+            result = items_collection.insert_many(items_data)
+            print(f"Successfully inserted {len(result.inserted_ids)} items.")
+        except FileNotFoundError:
+            print(f"Error: The file {json_file_path} was not found.")
+        except json.JSONDecodeError:
+            print(f"Error: Could not decode JSON from {json_file_path}.")
+        except Exception as e:
+            print(f"An unexpected error occurred during item population: {e}")
+    else:
+        print("Items collection already contains data. Skipping population.")
+
+def find_item_by_keyword(keyword):
+    """
+    Finds an item in the database by searching its keywords array.
+    """
+    try:
+        # Use a case-insensitive regex and escape special characters
+        return items_collection.find_one({"keywords": {"$regex": re.escape(keyword), "$options": "i"}})
+    except Exception as e:
+        print(f"Error finding item by keyword '{keyword}': {e}")
+        return None
+
+# --- Core Game Classes ---
 class Player:
     def __init__(self, name, hp=100, mana=50, currency=None, inventory=None, skills=None, stats=None):
         self.name = name; self.hp = hp; self.max_hp = hp; self.mana = mana; self.max_mana = mana
@@ -47,45 +93,43 @@ class GameState:
         self.current_location = location; self.current_enemies = []
     def to_dict(self): return {"player": self.player.to_dict(), "story_memory": self.story_memory, "current_location": self.current_location, "current_enemies": self.current_enemies}
 
-# --- Gemini API Prompt Template (Unchanged) ---
+# --- Gemini API Prompt Template ---
 def get_base_prompt_template():
     return """
     You are a Dungeon Master for a text-based RPG. Your entire response MUST be a single, valid JSON object.
-    - Write the story as immersive as possible just like a novel story but without the chapter or a follow up prompt. Do not overdid the story, I will decide what's next. And make sure you use dialogue as well
-    - Award experience points (XP) for overcoming challenges. A small challenge might be 10-20 XP, a major one 50-100 XP.
+    - Write the story as immersive as possible just like a novel story but without the chapter or a follow up prompt. Do not overdid the story, I will decide what's next. And make sure you use dialogue as well.
+    - Award experience points (XP) for overcoming challenges (e.g., 10-20 for small, 50-100 for major).
     - Player stats are: strength, agility, intelligence, dexterity.
-    - JSON keys: "story_text", "choices", "player_updates" (can include "xp": value), "game_updates", "memory_additions".
-    - Choices should be an array of strings. For example: ["Go left", "Investigate the sound", "Check my inventory"]
+    - JSON keys must be exactly: "story_text", "choices", "player_updates", "game_updates", "memory_additions".
+    - "choices" must be an array of short action strings, like ["Go left", "Investigate the sound"].
     """
 
 def generate_ai_response(current_game_state_dict, player_action):
-    # This function remains the same as it's independent of the save mechanism
-    system_instruction = get_base_prompt_template(); prompt = f"Current game state:\n{json.dumps(current_game_state_dict, indent=2)}\n\nPlayer's action:\n\"{player_action}\"\n\nGenerate the next part of the story."
-    raw_response_text = "";
+    if not model: return {"story_text": "(The connection to the AI story generator is currently unavailable. Please try again later.)", "choices": [], "player_updates": {}, "game_updates": {}, "memory_additions": ""}
+    
+    system_instruction = get_base_prompt_template()
+    prompt = f"Current game state:\n{json.dumps(current_game_state_dict, indent=2)}\n\nPlayer's action:\n\"{player_action}\"\n\nGenerate the next part of the story."
+    raw_response_text = ""
     try:
-        response = model.generate_content([system_instruction, prompt], generation_config=genai.types.GenerationConfig(temperature=0.8)); raw_response_text = response.text
-        cleaned_response = raw_response_text.strip().replace("```json", "").replace("```", ""); return json.loads(cleaned_response)
+        response = model.generate_content([system_instruction, prompt], generation_config=genai.types.GenerationConfig(temperature=0.8))
+        raw_response_text = response.text
+        cleaned_response = raw_response_text.strip().replace("```json", "").replace("```", "")
+        return json.loads(cleaned_response)
     except Exception as e:
         print(f"--- ERROR PARSING AI RESPONSE ---\nError: {e}\n--- RAW AI RESPONSE TEXT ---\n{raw_response_text}\n---------------------------------")
         return {"story_text": "(The AI failed to respond correctly. Please try a different action.)", "choices": ["Look around", "Check my inventory", "Wait"], "player_updates": {}, "game_updates": {}, "memory_additions": "The player felt a strange magical interference."}
-
 
 # --- Flask Routes ---
 @app.route('/')
 def index(): return render_template('index.html')
 
-# --- REWRITTEN Save/Load API with MongoDB ---
+# --- Save/Load API with MongoDB ---
 @app.route('/saves', methods=['GET'])
 def get_saves():
     saves = {}
     try:
-        all_saves = game_saves_collection.find({})
-        for save in all_saves:
-            save_id = str(save['_id'])
-            saves[save_id] = {
-                "player": save.get("player"),
-                "lastSaved": save.get("lastSaved")
-            }
+        for save in game_saves_collection.find({}):
+            saves[str(save['_id'])] = {"player": save.get("player"), "lastSaved": save.get("lastSaved")}
         return jsonify(saves)
     except Exception as e:
         print(f"Error fetching saves: {e}")
@@ -93,16 +137,13 @@ def get_saves():
 
 @app.route('/save_game', methods=['POST'])
 def save_game_route():
-    data = request.json; save_id = data.get('save_id'); game_state = data.get('game_state')
+    data = request.json
+    save_id, game_state = data.get('save_id'), data.get('game_state')
     if not save_id or not game_state: return jsonify({"error": "Missing save_id or game_state"}), 400
     
     game_state['lastSaved'] = datetime.now().isoformat()
     try:
-        game_saves_collection.update_one(
-            {'_id': ObjectId(save_id)}, 
-            {'$set': game_state},
-            upsert=True # Creates the document if it doesn't exist
-        )
+        game_saves_collection.update_one({'_id': ObjectId(save_id)}, {'$set': game_state}, upsert=True)
         return jsonify({"success": True, "message": "Game saved."})
     except Exception as e:
         print(f"Error saving game: {e}")
@@ -112,24 +153,29 @@ def save_game_route():
 def delete_save_route(save_id):
     try:
         result = game_saves_collection.delete_one({'_id': ObjectId(save_id)})
-        if result.deleted_count > 0:
-            return jsonify({"success": True, "message": "Save deleted."})
-        else:
-            return jsonify({"error": "Save not found"}), 404
+        return jsonify({"success": result.deleted_count > 0}), 200 if result.deleted_count > 0 else 404
     except Exception as e:
         print(f"Error deleting save: {e}")
         return jsonify({"error": str(e)}), 500
 
-# --- REWRITTEN Game Start with MongoDB ---
+# --- Game Start ---
 @app.route('/start_game', methods=['POST'])
 def start_game():
-    data = request.json; player_name = data.get('name', 'Adventurer'); scenario_id = data.get('scenario_id')
-    player = None; initial_story = ""; initial_choices = []
+    data = request.json
+    player_name, scenario_id = data.get('name', 'Adventurer'), data.get('scenario_id')
+    player, initial_story, initial_choices = None, "", []
     
-    # Logic for setting up scenarios remains the same
-    if scenario_id == 'tavern': player = Player(player_name, currency={"gold": 0, "silver": 0, "copper": 15}, inventory={"Rusty Dagger": 1}); initial_story = "You awaken in a dimly lit tavern..."; initial_choices = ["Look around the tavern", "Talk to the bartender", "Check my pockets"]
-    elif scenario_id == 'forest': player = Player(player_name, hp=120, inventory={"Sturdy Axe": 1, "Health Potion": 1}); initial_story = "You stand at the edge of a vast, enchanted forest..."; initial_choices = ["Follow the path", "Examine the plants", "Listen to the whispers"]
-    elif scenario_id == 'prison': player = Player(player_name, hp=80, mana=20, inventory={"Ragged Tunic": 1}); initial_story = "The cold, damp stone floor is your bed..."; initial_choices = ["Try to reach the key", "Yell for the guard", "Examine the cell"]
+    # Scenario definitions
+    scenarios = {
+        'tavern': {'player_args': {"currency": {"gold": 0, "silver": 0, "copper": 15}, "inventory": {"Rusty Dagger": 1}}, 'story': "You awaken in a dimly lit tavern...", 'choices': ["Look around the tavern", "Talk to the bartender", "Check my pockets"]},
+        'forest': {'player_args': {"hp": 120, "inventory": {"Sturdy Axe": 1, "Health Potion": 1}}, 'story': "You stand at the edge of a vast, enchanted forest...", 'choices': ["Follow the path", "Examine the plants", "Listen to the whispers"]},
+        'prison': {'player_args': {"hp": 80, "mana": 20, "inventory": {"Ragged Tunic": 1}}, 'story': "The cold, damp stone floor is your bed...", 'choices': ["Try to reach the key", "Yell for the guard", "Examine the cell"]}
+    }
+
+    if scenario_id in scenarios:
+        s = scenarios[scenario_id]
+        player = Player(player_name, **s['player_args'])
+        initial_story, initial_choices = s['story'], s['choices']
     elif scenario_id == 'custom':
         custom_prompt = data.get('custom_text', 'A lone adventurer starts a journey.')
         try:
@@ -137,57 +183,103 @@ def start_game():
             pd = ai_data['player_data']; player = Player(player_name, hp=pd['hp'], mana=pd['mana'], currency=pd['currency'], inventory=pd['inventory']); initial_story = ai_data['story_text']; initial_choices = ai_data['choices']
         except Exception as e:
             print(f"Error generating custom scenario: {e}"); player = Player(player_name); initial_story = "The threads of fate tangle..."; initial_choices = ["Imagine a forest", "Imagine a city", "Imagine an ocean"]
-    
+
     if not player: return jsonify({"error": "Invalid scenario"}), 400
 
     game_state = GameState(player, story_memory=[initial_story], location="start")
-    initial_save_data = game_state.to_dict()
-    initial_save_data['lastSaved'] = datetime.now().isoformat()
+    save_data = game_state.to_dict()
+    save_data['lastSaved'] = datetime.now().isoformat()
 
     try:
-        # Insert the new game state into the database
-        result = game_saves_collection.insert_one(initial_save_data)
-        # The new save_id is the string representation of the MongoDB ObjectId
+        result = game_saves_collection.insert_one(save_data)
         save_id = str(result.inserted_id)
         return jsonify({"story_text": initial_story, "choices": initial_choices, "game_state": game_state.to_dict(), "save_id": save_id})
     except Exception as e:
         print(f"Error starting new game: {e}")
         return jsonify({"error": "Could not create new game in database."}), 500
 
+# --- Item & Game Action Routes ---
+def find_and_apply_item_updates(story_text):
+    inventory_updates = {}
+    words = set(re.sub(r'[^\w\s]', '', story_text.lower()).split())
 
-# --- Game Action Routes (Unchanged) ---
+    for word in words:
+        item = find_item_by_keyword(word)
+        if item:
+            item_name = item['name']
+            inventory_updates[item_name] = inventory_updates.get(item_name, 0) + 1
+    
+    return {"inventory": inventory_updates} if inventory_updates else {}
+
 @app.route('/process_action', methods=['POST'])
 def process_action():
-    data = request.json; game_state_dict = data.get('game_state'); action = data.get('action')
+    data = request.json
+    game_state_dict, action = data.get('game_state'), data.get('action')
     if not game_state_dict or not action: return jsonify({"error": "Missing game state or action"}), 400
+
     ai_response = generate_ai_response(game_state_dict, action)
-    player_updates = ai_response.get("player_updates", {})
-    if "xp" in player_updates:
-        current_xp = game_state_dict['player']['xp']; xp_to_next = game_state_dict['player']['xp_to_next_level']; new_xp = current_xp + player_updates["xp"]
-        if new_xp >= xp_to_next: ai_response["level_up_pending"] = True
+    story_text = ai_response.get("story_text", "")
+    item_updates = find_and_apply_item_updates(story_text)
+
+    if item_updates:
+        if "player_updates" not in ai_response: ai_response["player_updates"] = {}
+        ai_response["player_updates"].update(item_updates)
+
+    if "xp" in ai_response.get("player_updates", {}):
+        player = game_state_dict['player']
+        if player['xp'] + ai_response["player_updates"]["xp"] >= player['xp_to_next_level']:
+            ai_response["level_up_pending"] = True
+            
     return jsonify(ai_response)
+
+@app.route('/get_inventory_details', methods=['POST'])
+def get_inventory_details():
+    player_inventory = request.json.get('inventory', {})
+    detailed_items = []
+    
+    for item_name, count in player_inventory.items():
+        item_details = items_collection.find_one({"name": item_name})
+        if item_details:
+            item_details.pop('_id', None) 
+            item_details['count'] = count
+            detailed_items.append(item_details)
+            
+    return jsonify(detailed_items)
 
 @app.route('/level_up', methods=['POST'])
 def level_up_route():
-    data = request.json; game_state_dict = data.get('game_state'); stat_to_increase = data.get('stat')
-    if not game_state_dict or not stat_to_increase: return jsonify({"error": "Missing game_state or stat"}), 400
-    player_dict = game_state_dict['player']
-    player_dict['level'] += 1; player_dict['xp'] -= player_dict['xp_to_next_level']; player_dict['xp_to_next_level'] = math.floor(player_dict['xp_to_next_level'] * 1.5)
-    if stat_to_increase in player_dict['stats']: player_dict['stats'][stat_to_increase] += 1
-    player_dict['max_hp'] += 10; player_dict['max_mana'] += 5; player_dict['hp'] = player_dict['max_hp']; player_dict['mana'] = player_dict['max_mana']
+    data = request.json
+    player_dict, stat_to_increase = data.get('game_state')['player'], data.get('stat')
+    
+    player_dict['level'] += 1
+    player_dict['xp'] -= player_dict['xp_to_next_level']
+    player_dict['xp_to_next_level'] = math.floor(player_dict['xp_to_next_level'] * 1.5)
+    player_dict['stats'][stat_to_increase] += 1
+    player_dict['max_hp'] += 10; player_dict['max_mana'] += 5
+    player_dict['hp'] = player_dict['max_hp']
+    player_dict['mana'] = player_dict['max_mana']
     player_dict['level_up_pending'] = False
+    
     return jsonify({"updated_player": player_dict})
 
 @app.route('/get_suggestion', methods=['POST'])
 def get_suggestion():
     game_state_dict = request.json.get('game_state')
     if not game_state_dict: return jsonify({"error": "Game not started"}), 400
-    prompt = f"Game state: {json.dumps(game_state_dict)}"; suggestion = "Perhaps looking closer at your surroundings could reveal a hidden detail."
-    try: response = model.generate_content(["You are a helpful game assistant. The player is stuck. Provide a creative, contextual hint about what they could do next, based on their situation.", prompt]); suggestion = response.text
-    except Exception as e: print(f"Error getting suggestion: {e}")
+    prompt = f"Game state: {json.dumps(game_state_dict)}"
+    suggestion = "Perhaps looking closer at your surroundings could reveal a hidden detail."
+    try:
+        response = model.generate_content(["You are a helpful game assistant. The player is stuck. Provide a creative, contextual hint about what they could do next, based on their situation.", prompt])
+        suggestion = response.text
+    except Exception as e:
+        print(f"Error getting suggestion: {e}")
     return jsonify({"suggestion": suggestion})
 
 
+# --- Main Execution ---
 if __name__ == '__main__':
-    app.run(debug=True)
+    # This block is for local development, not for production on Railway
+    populate_items_from_json() # Run population check on local start
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
 
