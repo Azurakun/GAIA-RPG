@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to GAIA RPG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lora', serif;
+            background-color: #1a161f;
+            background-image: radial-gradient(rgba(44, 40, 51, 0.9) 1px, transparent 1px), radial-gradient(rgba(44, 40, 51, 0.9) 1px, #1a161f 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+        .font-cinzel {
+            font-family: 'Cinzel Decorative', cursive;
+        }
+        .text-gold {
+            color: #e6c35c;
+        }
+        .bg-parchment {
+             background: #2c2833 url('https://www.transparenttextures.com/patterns/dark-leather.png');
+        }
+        .btn-primary {
+             background: #5d4a8e;
+             border: 2px solid #e6c35c;
+        }
+        .btn-primary:hover {
+            background-color: #715aad;
+        }
+        .card {
+            border: 2px ridge #e6c35c;
+            box-shadow: 0 0 25px rgba(230, 195, 92, 0.2), 0 0 10px #000 inset;
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        <main class="w-full max-w-5xl mx-auto text-center">
+            <h1 class="font-cinzel text-5xl md:text-7xl font-bold text-gold text-shadow-lg animate-fade-in-down">
+                GAIA RPG
+            </h1>
+            <p class="mt-4 text-lg md:text-xl max-w-3xl mx-auto animate-fade-in-up">
+                An endless adventure powered by generative AI. Forge your destiny in a world that reacts to your every decision. No two journeys are ever the same.
+            </p>
+
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-parchment card rounded-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="flex justify-center mb-4">
+                         <svg class="w-16 h-16 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <h3 class="font-cinzel text-2xl text-gold">Create Your Hero</h3>
+                    <p class="mt-2 text-gray-300">
+                        Define your character. From a tavern brawler to a forest mystic, your adventure begins with your imagination.
+                    </p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="bg-parchment card rounded-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="flex justify-center mb-4">
+                        <svg class="w-16 h-16 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.881 4.104A5.965 5.965 0 0112 3c1.649 0 3.19.693 4.258 1.815M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <h3 class="font-cinzel text-2xl text-gold">A Living World</h3>
+                    <p class="mt-2 text-gray-300">
+                        Explore a world that is generated as you play. The AI Dungeon Master creates unique stories, characters, and challenges based on your actions.
+                    </p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="bg-parchment card rounded-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="flex justify-center mb-4">
+                       <svg class="w-16 h-16 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    </div>
+                    <h3 class="font-cinzel text-2xl text-gold">Shape Your Story</h3>
+                    <p class="mt-2 text-gray-300">
+                        Your choices have real consequences. Negotiate with bandits, delve into forgotten ruins, or become a legend. The story is yours to write.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-16">
+                <a href="/game" class="btn-primary font-cinzel text-2xl text-white py-4 px-10 rounded-lg shadow-lg hover:shadow-xl transform hover:translate-y-1 transition-all duration-300">
+                    Enter the Adventure
+                </a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

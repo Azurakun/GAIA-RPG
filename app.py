@@ -5,7 +5,7 @@ import math
 import re
 from datetime import datetime
 import google.generativeai as genai
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from dotenv import load_dotenv
 from pymongo import MongoClient, errors
 from bson.objectid import ObjectId
@@ -19,7 +19,7 @@ app = Flask(__name__)
 # --- Configure Gemini API ---
 try:
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    model = genai.GenerativeModel('gemini-2.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-pro-latest')
 except Exception as e:
     print(f"Error configuring Gemini API: {e}")
     model = None
@@ -121,7 +121,13 @@ def generate_ai_response(current_game_state_dict, player_action):
 
 # --- Flask Routes ---
 @app.route('/')
-def index(): return render_template('index.html')
+def landing():
+    return render_template('landing.html')
+
+@app.route('/game')
+def index():
+    return render_template('index.html')
+
 
 # --- Save/Load API with MongoDB ---
 @app.route('/saves', methods=['GET'])
@@ -282,4 +288,3 @@ if __name__ == '__main__':
     populate_items_from_json() # Run population check on local start
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
